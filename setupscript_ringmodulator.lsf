@@ -18,7 +18,7 @@ thick_Si = 0.22; #height of wg
 width_Si = 0.5; #width of wg
 thick_Clad = 2.0;
 thick_BOX = 2.0; 
-sidewall_angle = 70;
+sidewall_angle = 90;
 
 ring_radius = 5;
 gap = 0.100;
@@ -93,9 +93,9 @@ set("base width",width_Si); #ring wg width
 set("base height",thick_Si); #ring wg height
 
 #draw wg
-copy;
-set("name","waveguide2");
-set("poles",[-ring_radius*2,-ring_radius-gap-width_Si;ring_radius*2,-ring_radius-gap-width_Si]);
+#copy;
+#set("name","waveguide2");
+#set("poles",[-ring_radius*2,-ring_radius-gap-width_Si;ring_radius*2,-ring_radius-gap-width_Si]);
 
 #draw ring
 addwaveguide;
@@ -110,19 +110,18 @@ set("base width",width_Si); #ring wg width
 set("base height",thick_Si); #ring wg height
 set("z",thick_Si/2);
 addtogroup('ring');
-copy;
-set("name","ring_q2");
-set("first axis","z");
-set("rotation 1",-90);
-copy;
-set("name","ring_q3");
-set("first axis","z");
-set("rotation 1",-180);
+#copy;
+#set("name","ring_q2");
+#set("first axis","z");
+#set("rotation 1",-90);
+#copy;
+#set("name","ring_q3");
+#set("first axis","z");
+#set("rotation 1",-180);
 copy;
 set("name","ring_q4");
 set("first axis","z");
 set("rotation 1",-270);
-
 
 #draw slab
 if(thick_Slab!=0){
@@ -144,10 +143,11 @@ set("x",0);
 set("y",0);
 set("z",0);
 set("x span",ring_radius*3);
-set("y span",ring_radius*3);
+set("y max",ring_radius*1.5);
+set("y min",0);
 set("z span",thick_Si*5);
 set("dimension","3D");
-set("y min bc","metal");
+#set("y min bc","metal");
 set("y max bc","metal");
 ##Port 1
 addport;
@@ -166,34 +166,50 @@ set("z span",thick_Si*3);
 set("direction","Backward");
 ##Port 3
 addport;
-set('x',-1.3*ring_radius);
-set('y',-1*(ring_radius+gap+width_Si));
-set('y span', width_Si*3);
+set('injection axis','y');
+set('x',-ring_radius);
+set('x span', width_Si*3);
+set("y",0);
 set("z",thick_Si/2);
 set("z span",thick_Si*3);
+set("direction","Backward");
 ##Port 4
 addport;
-set('x',1.3*ring_radius);
-set('y',-1*(ring_radius+gap+width_Si));
-set('y span', width_Si*3);
+set('injection axis','y');
+set('x',ring_radius);
+set('x span', width_Si*3);
+set("y",0);
 set("z",thick_Si/2);
 set("z span",thick_Si*3);
 set("direction","Backward");
 
+#wg to extend past fdtd region
+#This object is used to make sure the FDTD boundary is properly simulating the WG.
+#The objects outside the FDTD region will not be simulated at all.
+addwaveguide;
+set("name","boundary_wg1");
+set("material",material_Si);
+set("z",thick_Si/2);
+set("poles",[-ring_radius,0;-ring_radius,-ring_radius]);
+set("base angle",sidewall_angle); #ring angle
+set("base width",width_Si); #ring wg width
+set("base height",thick_Si); #ring wg height
+copy;
+set("name","boundary_wg2");
+set("poles",[ring_radius,0;ring_radius,-ring_radius]);
+
 #CREATE MESH
 addmesh;
-set('name','CouplingMesh1');
+set('name','CouplingMesh');
 set('x',0);
 set('y',ring_radius+gap+width_Si/2);
 set('z',0);
-set('y span',width_Si*4);
-set('x span',racetrack_length+1e-6);
+set('y span',width_Si*5);
+set('x span',racetrack_length+3e-6); #Manually defined size for coupling area
 set("override x mesh",false);
-set("dy",0.05e-6); #mesh fine steps amount
-set("dz",0.05e-6); #mesh fine steps amount
-copy;
-set('name','CouplingMesh2');
-set('y',-1*(ring_radius+gap+width_Si/2));
+set("dy",0.03e-6); #mesh fine steps amount
+set("dz",0.03e-6); #mesh fine steps amount
+
 #SET SIMULATION PARAMETERS
 ##Wavelength
 setglobalsource("wavelength start",wavelength_start);
