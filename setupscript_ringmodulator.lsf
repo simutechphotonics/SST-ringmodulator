@@ -16,12 +16,20 @@ newproject;#Clear simulation and memory
 #Units: ums
 thick_Si = 0.22; #height of wg
 width_Si = 0.5; #width of wg
-thick_Slab = 0; #include if slab, use 0 for strip waveguides
 thick_Clad = 2.0;
 thick_BOX = 2.0; 
-sidewall_angle = 80;
+sidewall_angle = 70;
 
 ring_radius = 5;
+gap = 0.100;
+wavelength_start = 1.54; #um
+wavelength_stop = 1.56;
+racetrack_length = 0;
+
+#additional options
+thick_Slab = 0; #include if slab, use 0 for strip waveguides
+bool_half_ring = false;
+bool_racetrack = false;
 
 #CONVERSION of UNITS
 #ums
@@ -31,6 +39,10 @@ thick_BOX = thick_BOX*1e-6;
 thick_Slab = thick_Slab*1e-6;
 width_Si = width_Si*1e-6;
 ring_radius = ring_radius*1e-6;
+gap = gap*1e-6;
+wavelength_start = wavelength_start*1e-6;
+wavelength_stop = wavelength_stop*1e-6;
+racetrack_length = racetrack_length*1e-6;
 
 #MATERIALS
 material_Clad = "SiO2 (Glass) - Palik";
@@ -40,13 +52,8 @@ material_Si = "Si (Silicon) - Palik";
 #DEFINE SIMULATION REGION
 sim_width = 2.0e-6; #span amount around wg
 sim_height = 1.0e-6; #span amount around wg
-Xmin = -2e-6; #length of waveguide, propagation in X-axis, z is wafer normal
-Xmax = 2e-6;
 Zmin = -sim_height;
 Zmax = thick_Si+sim_height;
-X_span = 2*sim_width+width_Si;
-Ymin = -X_span/2;
-Ymax = -Xmin;
 
 #CREATE GEOMETRY
 #draw cladding
@@ -54,11 +61,11 @@ addrect; #Creates a rectangle geometry object. Newly created objects are automat
 set("name","cladding"); #sets parameters of the SELECTED object. use select() with a name in string format as the argument to select
 set("material",material_Clad);
 set("x",0);
-set("x span", X_span+1e-6);
+set("x span", ring_radius*6);
+set("y",0);
+set("y span",ring_radius*4);
 set("z min",0);
 set("z max", thick_Clad);
-set("y min",Ymin);
-set("y max",Ymax);
 set("override mesh order from material database", 1); #enables custom mesh orders
 set("mesh order",3); #sets the importance of the object when simulation runs, this puts cladding at the very back (least important)
 set("alpha",0.3); #optional: adjust the visual transparency
@@ -67,34 +74,28 @@ set("alpha",0.3); #optional: adjust the visual transparency
 addrect;
 set("name","BOX");
 set("material",material_BOX);
-set("y min",Ymin);
-set("y max",Ymax);
+set("x",0);
+set("x span", ring_radius*6);
+set("y",0);
+set("y span",ring_radius*4);
 set("z min",-thick_BOX);
 set("z max",0);
-set("x",0);
-set("x span",X_span+1e-6);
 set("alpha",0.4);
 
 #draw wg
-addrect;
+addwaveguide;
 set("name","waveguide1");
 set("material",material_Si);
-set("y min", Ymin);
-set("y max", Ymax);
-set("z min",0);
-set("z max",thick_Si);
-set("x",0);
-set("x span",width_Si);
+set("z",thick_Si/2);
+set("poles",[-ring_radius*2,ring_radius+gap+width_Si;ring_radius*2,ring_radius+gap+width_Si]);
+set("base angle",sidewall_angle); #ring angle
+set("base width",width_Si); #ring wg width
+set("base height",thick_Si); #ring wg height
+
 #draw wg
-addrect;
+copy;
 set("name","waveguide2");
-set("material",material_Si);
-set("y min", Ymin);
-set("y max", Ymax);
-set("z min",0);
-set("z max",thick_Si);
-set("x",0);
-set("x span",width_Si);
+set("poles",[-ring_radius*2,-ring_radius-gap-width_Si;ring_radius*2,-ring_radius-gap-width_Si]);
 
 #draw ring
 addwaveguide;
@@ -129,20 +130,71 @@ if(thick_Slab!=0){
     set("name","slab");
     set("material",material_Si);
     set("x",0);
-    set("x span", X_span+1e-6);
+    set("x span", ring_radius*6);
+    set("y",0);
+    set("y span",ring_radius*4);
     set("z min",0);
     set("z max",thick_Slab);
-    set("y min",Ymin);
-    set("y max", Ymax);
+    set("alpha",0.5);
 }
 
 #CREATE SOLVER OBJECT
-#addfde; #creates an FDE solver
-#set("solver type",2);
-#set("x",0);
-#set("x span",sim_width);
-#set("z",0);
-#set("z span",sim_height);
-#set("y",0);
-#set("mesh cells x",120);
-#set("mesh cells z",120);
+addfdtd;
+set("x",0);
+set("y",0);
+set("z",0);
+set("x span",ring_radius*3);
+set("y span",ring_radius*3);
+set("z span",thick_Si*5);
+set("dimension","3D");
+set("y min bc","metal");
+set("y max bc","metal");
+##Port 1
+addport;
+set('x',-1.3*ring_radius);
+set('y',ring_radius+gap+width_Si);
+set('y span', width_Si*3);
+set("z",thick_Si/2);
+set("z span",thick_Si*3);
+##Port 2
+addport;
+set('x',1.3*ring_radius);
+set('y',ring_radius+gap+width_Si);
+set('y span', width_Si*3);
+set("z",thick_Si/2);
+set("z span",thick_Si*3);
+set("direction","Backward");
+##Port 3
+addport;
+set('x',-1.3*ring_radius);
+set('y',-1*(ring_radius+gap+width_Si));
+set('y span', width_Si*3);
+set("z",thick_Si/2);
+set("z span",thick_Si*3);
+##Port 4
+addport;
+set('x',1.3*ring_radius);
+set('y',-1*(ring_radius+gap+width_Si));
+set('y span', width_Si*3);
+set("z",thick_Si/2);
+set("z span",thick_Si*3);
+set("direction","Backward");
+
+#CREATE MESH
+addmesh;
+set('name','CouplingMesh1');
+set('x',0);
+set('y',ring_radius+gap+width_Si/2);
+set('z',0);
+set('y span',width_Si*4);
+set('x span',racetrack_length+1e-6);
+set("override x mesh",false);
+set("dy",0.05e-6); #mesh fine steps amount
+set("dz",0.05e-6); #mesh fine steps amount
+copy;
+set('name','CouplingMesh2');
+set('y',-1*(ring_radius+gap+width_Si/2));
+#SET SIMULATION PARAMETERS
+##Wavelength
+setglobalsource("wavelength start",wavelength_start);
+setglobalsource("wavelength stop",wavelength_stop);
