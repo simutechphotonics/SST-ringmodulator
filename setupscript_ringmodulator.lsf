@@ -84,7 +84,7 @@ set("alpha",0.4);
 
 #draw wg
 addwaveguide;
-set("name","waveguide1");
+set("name","waveguide");
 set("material",material_Si);
 set("z",thick_Si/2);
 set("poles",[-ring_radius*2,ring_radius+gap+width_Si;ring_radius*2,ring_radius+gap+width_Si]);
@@ -110,14 +110,6 @@ set("base width",width_Si); #ring wg width
 set("base height",thick_Si); #ring wg height
 set("z",thick_Si/2);
 addtogroup('ring');
-#copy;
-#set("name","ring_q2");
-#set("first axis","z");
-#set("rotation 1",-90);
-#copy;
-#set("name","ring_q3");
-#set("first axis","z");
-#set("rotation 1",-180);
 copy;
 set("name","ring_q4");
 set("first axis","z");
@@ -147,7 +139,6 @@ set("y max",ring_radius*1.5);
 set("y min",0);
 set("z span",thick_Si*5);
 set("dimension","3D");
-#set("y min bc","metal");
 set("y max bc","metal");
 ##Port 1
 addport;
@@ -155,14 +146,14 @@ set('x',-1.3*ring_radius);
 set('y',ring_radius+gap+width_Si);
 set('y span', width_Si*3);
 set("z",thick_Si/2);
-set("z span",thick_Si*3);
+set("z span",thick_Si*4);
 ##Port 2
 addport;
 set('x',1.3*ring_radius);
 set('y',ring_radius+gap+width_Si);
 set('y span', width_Si*3);
 set("z",thick_Si/2);
-set("z span",thick_Si*3);
+set("z span",thick_Si*4);
 set("direction","Backward");
 ##Port 3
 addport;
@@ -171,7 +162,7 @@ set('x',-ring_radius);
 set('x span', width_Si*3);
 set("y",0);
 set("z",thick_Si/2);
-set("z span",thick_Si*3);
+set("z span",thick_Si*4);
 set("direction","Backward");
 ##Port 4
 addport;
@@ -180,7 +171,7 @@ set('x',ring_radius);
 set('x span', width_Si*3);
 set("y",0);
 set("z",thick_Si/2);
-set("z span",thick_Si*3);
+set("z span",thick_Si*4);
 set("direction","Backward");
 
 #wg to extend past fdtd region

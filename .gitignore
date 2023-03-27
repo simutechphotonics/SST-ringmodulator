@@ -1,3 +1,6 @@
 *.npy
 *.lms
 *.fsp
+*.dat
+*.log
+/sst-ringmodulator_s-parametersweep
