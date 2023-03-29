@@ -8,9 +8,11 @@
 #Customers are free to utilize the scripts and files in their own product design flows.
 
 #This is a setup script that automatically generates geometry based on input parameters
+#Simulation time ETA 4 hours.
 
 #INITIALIZE
-newproject;#Clear simulation and memory
+newproject;#Clear project contents
+clear;#clear script workspace variables
 
 #PARAMETERS
 #Units: ums
@@ -20,11 +22,11 @@ thick_Clad = 2.0;
 thick_BOX = 2.0; 
 sidewall_angle = 90;
 
-ring_radius = 5;
-gap = 0.100;
-wavelength_start = 1.54; #um
-wavelength_stop = 1.56;
-racetrack_length = 0;
+ring_radius = 10; #1.55/2/3.14/3.4784
+gap = 0.200;
+wavelength_start = 1.5; #um
+wavelength_stop = 1.6;
+racetrack_length = 5;
 
 #additional options
 thick_Slab = 0; #include if slab, use 0 for strip waveguides
@@ -80,6 +82,8 @@ set("y",0);
 set("y span",ring_radius*4);
 set("z min",-thick_BOX);
 set("z max",0);
+set("override mesh order from material database", 1);
+set("mesh order",3);
 set("alpha",0.4);
 
 #draw wg
@@ -91,6 +95,8 @@ set("poles",[-ring_radius*2,ring_radius+gap+width_Si;ring_radius*2,ring_radius+g
 set("base angle",sidewall_angle); #ring angle
 set("base width",width_Si); #ring wg width
 set("base height",thick_Si); #ring wg height
+set("override mesh order from material database", 1);
+set("mesh order",1);
 
 #draw wg
 #copy;
@@ -109,11 +115,30 @@ set("base angle",sidewall_angle); #ring angle
 set("base width",width_Si); #ring wg width
 set("base height",thick_Si); #ring wg height
 set("z",thick_Si/2);
+set("override mesh order from material database", 1);
+set("mesh order",1);
+set("x",racetrack_length/2);
 addtogroup('ring');
 copy;
 set("name","ring_q4");
 set("first axis","z");
 set("rotation 1",-270);
+set("x",-racetrack_length/2);
+
+#Racetrack
+if(racetrack_length!=0){
+    addwaveguide;
+    set("name","racetrack");
+    set("material",material_Si);
+    set("z",thick_Si/2);
+    set("poles",[-racetrack_length/2,ring_radius;racetrack_length/2,ring_radius]);
+    set("base angle",sidewall_angle); #ring angle
+    set("base width",width_Si); #ring wg width
+    set("base height",thick_Si); #ring wg height
+    set("override mesh order from material database", 1);
+    set("mesh order",1);
+    addtogroup('ring');
+}
 
 #draw slab
 if(thick_Slab!=0){
@@ -126,6 +151,8 @@ if(thick_Slab!=0){
     set("y span",ring_radius*4);
     set("z min",0);
     set("z max",thick_Slab);
+    set("override mesh order from material database", 1);
+    set("mesh order",1);
     set("alpha",0.5);
 }
 
@@ -134,9 +161,9 @@ addfdtd;
 set("x",0);
 set("y",0);
 set("z",0);
-set("x span",ring_radius*3);
+set("x span",ring_radius*3+racetrack_length/2);
 set("y max",ring_radius*1.5);
-set("y min",0);
+set("y min",-0.1e-6); #extend by 0.1 um for ports 
 set("z span",thick_Si*5);
 set("dimension","3D");
 set("y max bc","metal");
@@ -158,7 +185,7 @@ set("direction","Backward");
 ##Port 3
 addport;
 set('injection axis','y');
-set('x',-ring_radius);
+set('x',-ring_radius-racetrack_length/2);
 set('x span', width_Si*3);
 set("y",0);
 set("z",thick_Si/2);
@@ -167,12 +194,14 @@ set("direction","Backward");
 ##Port 4
 addport;
 set('injection axis','y');
-set('x',ring_radius);
+set('x',ring_radius+racetrack_length/2);
 set('x span', width_Si*3);
 set("y",0);
 set("z",thick_Si/2);
 set("z span",thick_Si*4);
 set("direction","Backward");
+select("FDTD::ports");
+set("monitor frequency points",100); #how fine the frequency sweep is
 
 #wg to extend past fdtd region
 #This object is used to make sure the FDTD boundary is properly simulating the WG.
@@ -181,13 +210,15 @@ addwaveguide;
 set("name","boundary_wg1");
 set("material",material_Si);
 set("z",thick_Si/2);
-set("poles",[-ring_radius,0;-ring_radius,-ring_radius]);
+set("poles",[-ring_radius-racetrack_length/2,0;-ring_radius-racetrack_length/2,-ring_radius]);
 set("base angle",sidewall_angle); #ring angle
 set("base width",width_Si); #ring wg width
 set("base height",thick_Si); #ring wg height
+set("override mesh order from material database", 1);
+set("mesh order",1);
 copy;
 set("name","boundary_wg2");
-set("poles",[ring_radius,0;ring_radius,-ring_radius]);
+set("poles",[ring_radius+racetrack_length/2,0;ring_radius+racetrack_length/2,-ring_radius]);
 
 #CREATE MESH
 addmesh;
@@ -198,10 +229,56 @@ set('z',0);
 set('y span',width_Si*5);
 set('x span',racetrack_length+3e-6); #Manually defined size for coupling area
 set("override x mesh",false);
-set("dy",0.03e-6); #mesh fine steps amount
-set("dz",0.03e-6); #mesh fine steps amount
+set("dy",0.01e-6); #mesh fine steps amount
+set("dz",0.01e-6); #mesh fine steps amount
 
 #SET SIMULATION PARAMETERS
 ##Wavelength
 setglobalsource("wavelength start",wavelength_start);
 setglobalsource("wavelength stop",wavelength_stop);
+
+#Add s-param sweep
+addsweep(3);
+setsweep("s-parameter sweep", "name", "SParam");
+setsweep("SParam", "Excite all ports", false);
+setsweep("SParam", "auto symmetry", true);
+
+#Very nonstandard struct by lumerical here, hopefully future versions improve this
+#the struct contains fields that have spaces in them, so you can't use the dot notation to call them
+#the struct can be dissected and observed using getfield(struct)
+#each layer needs to be assigned to a variable and slowly deconstructed
+#e.g. while selecting the sweep:
+#a = getsweep("SParam,"export setup");
+#b = getfield("export field","port 1");
+#b2 = getfield(a,"mode 1");
+#?b2.label
+#OUPUT: "mode 1"
+  
+param_export = {
+    "port 1":{ #port 1 is a STRUCT with the fields "mode 1" and "location"
+        "mode 1":{ #mode 1 is a STRUCT contains two layers, the id and the label
+            "id":1, #the id is a INT value
+            "label":"mode 1" #the label is a STR value
+            },
+        "location":"left"}, #the location is a STR value, at the moment only allows "left","right"
+    "port 2":{
+        "mode 1":{
+            "id":1,
+            "label":"mode 1"
+            },
+        "location":"right"},
+    "port 3":{
+        "mode 1":{
+            "id":1,
+            "label":"mode 1"
+            },
+        "location":"BOTTOM"}, #cant set this in script yet..
+    "port 4":{
+        "mode 1":{
+            "id":1,
+            "label":"mode 1"
+            },
+        "location":"BOTTOM"} #cant set this in script yet..
+};
+    
+setsweep("SParam", "export setup", param_export);

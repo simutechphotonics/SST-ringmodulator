@@ -4,3 +4,6 @@
 *.dat
 *.log
 /sst-ringmodulator_s-parametersweep
+*.icp
+*.ich
+*.m1v
