@@ -1,0 +1,80 @@
+#SimuTech Group
+#Author: Stephen Lin
+#Date: 2026
+#The scripts and files included are for educational purpose for SimuTech Group's customers.
+#Customers are free to utilize the scripts and files in their own product design flows.
+
+#This script initializes the parameter variables and setups the device in Lumerical LSF.
+
+RingFunctions; #Loads the locally pathed RingFunction.lsf to access the setup function.
+
+#PARAMETERS
+#Units: ums
+thick_Si = 0.22; #height of wg
+width_Si = 0.5; #width of wg
+thick_Clad = 2.0;
+thick_BOX = 2.0; 
+sidewall_angle = 90;
+ring_radius = 10; #1.55/2/3.14/3.4784
+gap = 0.200;
+wavelength_start = 1.5;
+wavelength_stop = 1.6;
+racetrack_length = 5;
+
+#additional options
+thick_Slab = 0; #include if slab, use 0 for strip waveguides
+bool_half_ring = false;
+bool_racetrack = false;
+
+#SIMULATION REGION
+sim_width = 2.0e-6; #span amount around wg
+sim_height = 1.0e-6; #span amount around wg
+
+#MATERIALS
+material_Clad = "SiO2 (Glass) - Palik";
+material_BOX = "SiO2 (Glass) - Palik";
+material_Si = "Si (Silicon) - Palik";
+
+## Calculated Variables ##
+#CONVERSION of UNITS (um)
+thick_Clad = thick_Clad*1e-6;
+thick_Si = thick_Si*1e-6;
+thick_BOX = thick_BOX*1e-6;
+thick_Slab = thick_Slab*1e-6;
+width_Si = width_Si*1e-6;
+ring_radius = ring_radius*1e-6;
+gap = gap*1e-6;
+wavelength_start = wavelength_start*1e-6;
+wavelength_stop = wavelength_stop*1e-6;
+racetrack_length = racetrack_length*1e-6;
+
+# Simulation Region
+Zmin = -sim_height;
+Zmax = thick_Si+sim_height;
+
+### Run Function
+setup_RingModulator( 
+thick_Si, 
+width_Si, 
+thick_Clad, 
+thick_BOX, 
+sidewall_angle, 
+ring_radius, 
+gap, 
+wavelength_start, 
+wavelength_stop, 
+racetrack_length, 
+thick_Slab, 
+bool_half_ring, 
+bool_racetrack,
+sim_width,
+sim_height,
+material_Clad,
+material_BOX,
+material_Si,
+Zmin,
+Zmax
+);
+
+clear;
+clearfunctions;

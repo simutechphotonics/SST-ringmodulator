@@ -1,60 +1,35 @@
 #SimuTech Group
 #Author: Stephen Lin
-#Date: 2023
-#Ths script is provided by SimuTech's SimuSkills platform.
-#Access to this script is provided along with the TECH support package by SimuTech.
-#The content provided should NOT be shared publicly.
+#Date: 2026
 #The scripts and files included are for educational purpose for SimuTech Group's customers.
 #Customers are free to utilize the scripts and files in their own product design flows.
 
-#This is a setup script that automatically generates geometry based on input parameters
+#This script contains the function to setup the device
+#This method allows usability by LSF and Python
 
-#INITIALIZE
-newproject;#Clear project contents
-clear;#clear script workspace variables
-
-#PARAMETERS
-#Units: ums
-thick_Si = 0.22; #height of wg
-width_Si = 0.5; #width of wg
-thick_Clad = 2.0;
-thick_BOX = 2.0; 
-sidewall_angle = 90;
-
-ring_radius = 10; #1.55/2/3.14/3.4784
-gap = 0.200;
-wavelength_start = 1.5; #um
-wavelength_stop = 1.6;
-racetrack_length = 5;
-
-#additional options
-thick_Slab = 0; #include if slab, use 0 for strip waveguides
-bool_half_ring = false;
-bool_racetrack = false;
-
-#CONVERSION of UNITS
-#ums
-thick_Clad = thick_Clad*1e-6;
-thick_Si = thick_Si*1e-6;
-thick_BOX = thick_BOX*1e-6;
-thick_Slab = thick_Slab*1e-6;
-width_Si = width_Si*1e-6;
-ring_radius = ring_radius*1e-6;
-gap = gap*1e-6;
-wavelength_start = wavelength_start*1e-6;
-wavelength_stop = wavelength_stop*1e-6;
-racetrack_length = racetrack_length*1e-6;
-
-#MATERIALS
-material_Clad = "SiO2 (Glass) - Palik";
-material_BOX = "SiO2 (Glass) - Palik";
-material_Si = "Si (Silicon) - Palik";
-
-#DEFINE SIMULATION REGION
-sim_width = 2.0e-6; #span amount around wg
-sim_height = 1.0e-6; #span amount around wg
-Zmin = -sim_height;
-Zmax = thick_Si+sim_height;
+function setup_RingModulator( 
+thick_Si, 
+width_Si, 
+thick_Clad, 
+thick_BOX, 
+sidewall_angle, 
+ring_radius, 
+gap, 
+wavelength_start, 
+wavelength_stop, 
+racetrack_length, 
+thick_Slab, 
+bool_half_ring, 
+bool_racetrack,
+sim_width,
+sim_height,
+material_Clad,
+material_BOX,
+material_Si,
+Zmin,
+Zmax
+)
+{
 
 #CREATE GEOMETRY
 #draw cladding
@@ -225,7 +200,6 @@ set("name","boundary_wg2");
 #set("poles",[ring_radius+racetrack_length/2,0;ring_radius+racetrack_length/2,-ring_radius]);
 set("x",-ring_radius-racetrack_length/2);#fix for 2024R1
 
-
 #CREATE MESH
 addmesh;
 set('name','CouplingMesh');
@@ -249,7 +223,7 @@ setsweep("s-parameter sweep", "name", "SParam");
 setsweep("SParam", "Excite all ports", false);
 setsweep("SParam", "auto symmetry", true);
 
-#Very nonstandard struct by lumerical here, hopefully future versions improve this
+#Lumerical Struct format and access method
 #the struct contains fields that have spaces in them, so you can't use the dot notation to call them
 #the struct can be dissected and observed using getfield(struct)
 #each layer needs to be assigned to a variable and slowly deconstructed
@@ -288,3 +262,6 @@ param_export = {
 };
     
 setsweep("SParam", "export setup", param_export);
+
+}
+
