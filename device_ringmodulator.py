@@ -11,13 +11,42 @@ class DeviceRingModulator:
         self.ring_gap = 0.2 #um
         self.wavelength_start = 1.5 #um
         self.wavelength_stop = 1.6 #um
-        self.slab_thickness = 0 #um, use 0 for strip waveguides.
         self.configuration_halfring = False #bool, draws a half_ring device instead
         self.configuration_racetrack = False #bool, draws a racetrack device instead
         self.ring_racetrack_length = 5 #um, length of the racetrack coupling section
+        self.slab_thickness = 0  # um, use 0 for strip waveguides.
+        # Simulation region
+        self.sim_width = 2.0e-6  # um, span amount around wg
+        self.sim_height = 1.0e-6  # um,  span amount around wg
+        # Materials, in Lumerical name format
+        self.material_uppercladding = "SiO2 (Glass) - Palik"
+        self.material_lowercladding = "SiO2 (Glass) - Palik"
+        self.material_wg = "Si (Silicon) - Palik"
 
-    def setup_device(self):
-        pass
+    def setup_device(self,fdtd):
+        fdtd.RingFunctions() #this requires RingFunctions.lsf to be in the current directory or search path
+        fdtd.setup_RingModulator(
+        thick_Si,
+        width_Si,
+        thick_Clad,
+        thick_BOX,
+        sidewall_angle,
+        ring_radius,
+        gap,
+        wavelength_start,
+        wavelength_stop,
+        racetrack_length,
+        thick_Slab,
+        bool_half_ring,
+        bool_racetrack,
+        sim_width,
+        sim_height,
+        material_Clad,
+        material_BOX,
+        material_Si,
+        Zmin,
+        Zmax
+        )
 
     def run_simulation(self):
         pass
@@ -26,8 +55,8 @@ class DeviceRingModulator:
         pass
 
     def simulate_fdtd(self):
-        with lumapi.FDTD as fdtd:
-
+        fdtd = lumapi.FDTD  # declare fdtd object
+        self.setup_device(fdtd)
 
 if __name__ == "__main__":
     MyRing = DeviceRingModulator()

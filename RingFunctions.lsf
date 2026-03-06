@@ -8,40 +8,39 @@
 #This method allows usability by LSF and Python
 
 function setup_RingModulator( 
-thick_Si, 
-width_Si, 
-thick_Clad, 
-thick_BOX, 
+wg_thickness,
+wg_width,
+uppercladding_thickness,
+lowercladding_thickness,
 sidewall_angle, 
 ring_radius, 
-gap, 
+ring_gap,
 wavelength_start, 
 wavelength_stop, 
-racetrack_length, 
-thick_Slab, 
-bool_half_ring, 
-bool_racetrack,
+ring_racetrack_length,
+slab_thickness,
 sim_width,
 sim_height,
-material_Clad,
-material_BOX,
-material_Si,
-Zmin,
-Zmax
+material_uppercladding,
+material_lowercladding,
+material_wg
 )
 {
+# Simulation Region
+Zmin = -sim_height;
+Zmax = wg_thickness+sim_height;
 
 #CREATE GEOMETRY
 #draw cladding
 addrect; #Creates a rectangle geometry object. Newly created objects are automatically selected
 set("name","cladding"); #sets parameters of the SELECTED object. use select() with a name in string format as the argument to select
-set("material",material_Clad);
+set("material",material_uppercladding);
 set("x",0);
 set("x span", ring_radius*6);
 set("y",0);
 set("y span",ring_radius*4);
 set("z min",0);
-set("z max", thick_Clad);
+set("z max", uppercladding_thickness);
 set("override mesh order from material database", 1); #enables custom mesh orders
 set("mesh order",3); #sets the importance of the object when simulation runs, this puts cladding at the very back (least important)
 set("alpha",0.3); #optional: adjust the visual transparency
@@ -49,12 +48,12 @@ set("alpha",0.3); #optional: adjust the visual transparency
 #draw BOX
 addrect;
 set("name","BOX");
-set("material",material_BOX);
+set("material",material_lowercladding);
 set("x",0);
 set("x span", ring_radius*6);
 set("y",0);
 set("y span",ring_radius*4);
-set("z min",-thick_BOX);
+set("z min",-lowercladding_thickness);
 set("z max",0);
 set("override mesh order from material database", 1);
 set("mesh order",3);
@@ -63,68 +62,68 @@ set("alpha",0.4);
 #draw wg
 addwaveguide;
 set("name","waveguide");
-set("material",material_Si);
-set("z",thick_Si/2);
-set("poles",[-ring_radius*2,ring_radius+gap+width_Si;ring_radius*2,ring_radius+gap+width_Si]);
+set("material",material_wg);
+set("z",wg_thickness/2);
+set("poles",[-ring_radius*2,ring_radius+ring_gap+wg_width;ring_radius*2,ring_radius+ring_gap+wg_width]);
 set("base angle",sidewall_angle); #ring angle
-set("base width",width_Si); #ring wg width
-set("base height",thick_Si); #ring wg height
+set("base width",wg_width); #ring wg width
+set("base height",wg_thickness); #ring wg height
 set("override mesh order from material database", 1);
 set("mesh order",1);
 
 #draw wg
 #copy;
 #set("name","waveguide2");
-#set("poles",[-ring_radius*2,-ring_radius-gap-width_Si;ring_radius*2,-ring_radius-gap-width_Si]);
+#set("poles",[-ring_radius*2,-ring_radius-ring_gap-wg_width;ring_radius*2,-ring_radius-ring_gap-wg_width]);
 
 #draw ring
 addwaveguide;
 set("name","ring_q1");
-set("material",material_Si);
+set("material",material_wg);
 #bezier curve approximation of a circle, please use more poles if smoother circle is necessary
 #https://www.researchgate.net/publication/265893293_Approximation_of_a_cubic_bezier_curve_by_circular_arcs_and_vice_versa
 #https://stackoverflow.com/questions/734076/how-to-best-approximate-a-geometrical-arc-with-a-bezier-curve
 set("poles",[0,ring_radius;ring_radius*0.5522847498,ring_radius;ring_radius,ring_radius*0.5522847498;ring_radius,0]); #bezier curve circle approximation
 set("base angle",sidewall_angle); #ring angle
-set("base width",width_Si); #ring wg width
-set("base height",thick_Si); #ring wg height
-set("z",thick_Si/2);
+set("base width",wg_width); #ring wg width
+set("base height",wg_thickness); #ring wg height
+set("z",wg_thickness/2);
 set("override mesh order from material database", 1);
 set("mesh order",1);
-set("x",racetrack_length/2);
+set("x",ring_racetrack_length/2);
 addtogroup('ring');
 copy;
 set("name","ring_q4");
 set("first axis","z");
 set("rotation 1",-270);
-set("x",-racetrack_length/2);
+set("x",-ring_racetrack_length/2);
 
 #Racetrack
-if(racetrack_length!=0){
+if(ring_racetrack_length!=0){
     addwaveguide;
     set("name","racetrack");
-    set("material",material_Si);
-    set("z",thick_Si/2);
-    set("poles",[-racetrack_length/2,ring_radius;racetrack_length/2,ring_radius]);
+    set("material",material_wg);
+    set("z",wg_thickness/2);
+    set("poles",[-ring_racetrack_length/2,ring_radius;ring_racetrack_length/2,ring_radius]);
     set("base angle",sidewall_angle); #ring angle
-    set("base width",width_Si); #ring wg width
-    set("base height",thick_Si); #ring wg height
+    set("base width",wg_width); #ring wg width
+    set("base height",wg_thickness); #ring wg height
     set("override mesh order from material database", 1);
     set("mesh order",1);
     addtogroup('ring');
 }
 
 #draw slab
-if(thick_Slab!=0){
+if(slab_thickness!=0){
     addrect;
     set("name","slab");
-    set("material",material_Si);
+    set("material",material_wg);
     set("x",0);
     set("x span", ring_radius*6);
     set("y",0);
     set("y span",ring_radius*4);
     set("z min",0);
-    set("z max",thick_Slab);
+    set("z max",slab_thickness);
     set("override mesh order from material database", 1);
     set("mesh order",1);
     set("alpha",0.5);
@@ -135,45 +134,45 @@ addfdtd;
 set("x",0);
 set("y",0);
 set("z",0);
-set("x span",ring_radius*3+racetrack_length/2);
+set("x span",ring_radius*3+ring_racetrack_length/2);
 set("y max",ring_radius*1.5);
 set("y min",-0.1e-6); #extend by 0.1 um for ports 
-set("z span",thick_Si*5);
+set("z span",wg_thickness*5);
 set("dimension","3D");
 set("y max bc","metal");
 set("mesh accuracy",1); #use low because custom mesh defined below
 ##Port 1
 addport;
 set('x',-1.3*ring_radius);
-set('y',ring_radius+gap+width_Si);
-set('y span', width_Si*3);
-set("z",thick_Si/2);
-set("z span",thick_Si*4);
+set('y',ring_radius+ring_gap+wg_width);
+set('y span', wg_width*3);
+set("z",wg_thickness/2);
+set("z span",wg_thickness*4);
 ##Port 2
 addport;
 set('x',1.3*ring_radius);
-set('y',ring_radius+gap+width_Si);
-set('y span', width_Si*3);
-set("z",thick_Si/2);
-set("z span",thick_Si*4);
+set('y',ring_radius+ring_gap+wg_width);
+set('y span', wg_width*3);
+set("z",wg_thickness/2);
+set("z span",wg_thickness*4);
 set("direction","Backward");
 ##Port 3
 addport;
 set('injection axis','y');
-set('x',-ring_radius-racetrack_length/2);
-set('x span', width_Si*3);
+set('x',-ring_radius-ring_racetrack_length/2);
+set('x span', wg_width*3);
 set("y",0);
-set("z",thick_Si/2);
-set("z span",thick_Si*4);
+set("z",wg_thickness/2);
+set("z span",wg_thickness*4);
 set("direction","Forward");
 ##Port 4
 addport;
 set('injection axis','y');
-set('x',ring_radius+racetrack_length/2);
-set('x span', width_Si*3);
+set('x',ring_radius+ring_racetrack_length/2);
+set('x span', wg_width*3);
 set("y",0);
-set("z",thick_Si/2);
-set("z span",thick_Si*4);
+set("z",wg_thickness/2);
+set("z span",wg_thickness*4);
 set("direction","Forward");
 select("FDTD::ports");
 set("monitor frequency points",100); #how fine the frequency sweep is
@@ -184,30 +183,30 @@ set("monitor frequency points",100); #how fine the frequency sweep is
 #The objects outside the FDTD region will not be simulated at all.
 addwaveguide;
 set("name","boundary_wg1");
-set("material",material_Si);
-set("z",thick_Si/2);
-#set("poles",abs([-ring_radius-racetrack_length/2,0;-ring_radius-racetrack_length/2,-ring_radius]));
+set("material",material_wg);
+set("z",wg_thickness/2);
+#set("poles",abs([-ring_radius-ring_racetrack_length/2,0;-ring_radius-ring_racetrack_length/2,-ring_radius]));
 set("poles",[0,0;0,10e-6]); #fix for 2024R1
-set("x",ring_radius+racetrack_length/2);#fix for 2024R1
+set("x",ring_radius+ring_racetrack_length/2);#fix for 2024R1
 set("y",-10e-6);#fix for 2024R1
 set("base angle",sidewall_angle); #ring angle
-set("base width",width_Si); #ring wg width
-set("base height",thick_Si); #ring wg height
+set("base width",wg_width); #ring wg width
+set("base height",wg_thickness); #ring wg height
 set("override mesh order from material database", 1);
 set("mesh order",1);
 copy;
 set("name","boundary_wg2");
-#set("poles",[ring_radius+racetrack_length/2,0;ring_radius+racetrack_length/2,-ring_radius]);
-set("x",-ring_radius-racetrack_length/2);#fix for 2024R1
+#set("poles",[ring_radius+ring_racetrack_length/2,0;ring_radius+ring_racetrack_length/2,-ring_radius]);
+set("x",-ring_radius-ring_racetrack_length/2);#fix for 2024R1
 
 #CREATE MESH
 addmesh;
 set('name','CouplingMesh');
 set('x',0);
-set('y',ring_radius+gap+width_Si/2);
+set('y',ring_radius+ring_gap+wg_width/2);
 set('z',0);
-set('y span',width_Si*5);
-set('x span',racetrack_length+3e-6); #Manually defined size for coupling area
+set('y span',wg_width*5);
+set('x span',ring_racetrack_length+3e-6); #Manually defined size for coupling area
 set("override x mesh",false);
 set("dy",0.03e-6); #mesh fine steps amount
 set("dz",0.03e-6); #mesh fine steps amount
