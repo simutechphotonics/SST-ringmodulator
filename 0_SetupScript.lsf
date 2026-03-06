@@ -17,9 +17,9 @@ lowercladding_thickness = 2.0;
 sidewall_angle = 90;
 ring_radius = 10; #1.55/2/3.14/3.4784
 ring_gap = 0.200;
+ring_racetrack_length = 5;
 wavelength_start = 1.5;
 wavelength_stop = 1.6;
-ring_racetrack_length = 5;
 
 #additional options
 slab_thickness = 0; #include if slab, use 0 for strip waveguides
@@ -33,19 +33,6 @@ material_uppercladding = "SiO2 (Glass) - Palik";
 material_lowercladding = "SiO2 (Glass) - Palik";
 material_wg = "Si (Silicon) - Palik";
 
-## Calculated Variables ##
-#CONVERSION of UNITS (um)
-wg_thickness = wg_thickness*1e-6;
-wg_width = wg_width*1e-6;
-uppercladding_thickness = uppercladding_thickness*1e-6;
-lowercladding_thickness = lowercladding_thickness*1e-6;
-ring_radius = ring_radius*1e-6;
-ring_gap = ring_gap*1e-6;
-wavelength_start = wavelength_start*1e-6;
-wavelength_stop = wavelength_stop*1e-6;
-ring_racetrack_length = ring_racetrack_length*1e-6;
-slab_thickness = slab_thickness*1e-6;
-
 ### Run Function
 setup_RingModulator( 
 wg_thickness,
@@ -55,9 +42,9 @@ lowercladding_thickness,
 sidewall_angle, 
 ring_radius, 
 ring_gap,
-wavelength_start, 
-wavelength_stop, 
 ring_racetrack_length,
+wavelength_start,
+wavelength_stop, 
 slab_thickness,
 sim_width,
 sim_height,

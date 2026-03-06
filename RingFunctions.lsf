@@ -15,9 +15,9 @@ lowercladding_thickness,
 sidewall_angle, 
 ring_radius, 
 ring_gap,
-wavelength_start, 
-wavelength_stop, 
 ring_racetrack_length,
+wavelength_start,
+wavelength_stop, 
 slab_thickness,
 sim_width,
 sim_height,
@@ -26,6 +26,18 @@ material_lowercladding,
 material_wg
 )
 {
+#CONVERSION of UNITS (um)
+wg_thickness = wg_thickness*1e-6;
+wg_width = wg_width*1e-6;
+uppercladding_thickness = uppercladding_thickness*1e-6;
+lowercladding_thickness = lowercladding_thickness*1e-6;
+ring_radius = ring_radius*1e-6;
+ring_gap = ring_gap*1e-6;
+ring_racetrack_length = ring_racetrack_length*1e-6;
+wavelength_start = wavelength_start*1e-6;
+wavelength_stop = wavelength_stop*1e-6;
+slab_thickness = slab_thickness*1e-6;
+
 # Simulation Region
 Zmin = -sim_height;
 Zmax = wg_thickness+sim_height;
