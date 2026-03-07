@@ -1,9 +1,6 @@
 import ansys.lumerical.core as lumapi
 import os.path
 
-from pydantic.v1.parse import load_file
-
-
 class DeviceRingModulator:
     def __init__(self):
         self.wg_thickness = 0.22 #um, depth of the waveguide
@@ -25,7 +22,8 @@ class DeviceRingModulator:
         self.material_lowercladding = "SiO2 (Glass) - Palik"
         self.material_wg = "Si (Silicon) - Palik"
 
-    def load_file(self,fspfilename = "device_ringmodulator.fsp"):
+    @staticmethod
+    def load_file(fspfilename = "device_ringmodulator.fsp"):
         #creates the fsp file if it doesn't exist, otherwise, loads the existing file.
         # returns the FDTD object associated with that file
         if os.path.isfile(fspfilename):
@@ -35,9 +33,8 @@ class DeviceRingModulator:
 
     def setup_device(self,fdtd):
         function = open("RingFunctions.lsf").read() #loads the lsf file
-        #function = "?1+1;?2+2;"
         fdtd.eval(function) #execute the contents of the lsf file
-        #fdtd.feval("RingFunctions.lsf")
+
         # Use setup script's function
         fdtd.setup_RingModulator(
             self.wg_thickness,
