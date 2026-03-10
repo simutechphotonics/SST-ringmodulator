@@ -1,9 +1,12 @@
+.venv/
+.idea/
+sst-ringmodulator_s-parametersweep/
+
 *.npy
 *.lms
 *.fsp
 *.dat
 *.log
-/sst-ringmodulator_s-parametersweep
 *.icp
 *.ich
 *.m1v
